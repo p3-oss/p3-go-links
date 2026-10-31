@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.p3vi.store",
+      "sha256_cert_fingerprints": [
+        "07:45:47:E2:38:21:88:4D:61:CE:4C:F0:09:DC:B9:EB:7F:8A:AF:34:CD:ED:B1:B0:D4:1B:4D:4C:99:E4:C5:D3"
+      ]
+    }
+  }
+]
