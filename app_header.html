@@ -1,6 +1,8 @@
 <!-- P3 APP MODE START (header): only when the store runs inside the P3 Store Android app (?p3app=1 or the app's android-app referrer); the website itself is unchanged. -->
 <script>
 (function(){try{
+/* remember the customer's own reorder list on this phone (shown as "For you" in the app), also when the link opens in the browser */
+try{var rl=location.pathname.match(/^\/collections\/reorder-[0-9]+\/[0-9]+/);if(rl)localStorage.setItem("p3_mylist",rl[0])}catch(e){}
 var a=/[?&]p3app=1/.test(location.search)||(document.referrer||"").indexOf("android-app://com.p3vi.store")===0;
 try{if(a){sessionStorage.setItem("p3app","1")}else if(sessionStorage.getItem("p3app")==="1"){a=true}}catch(e){}
 if(!a)return;
