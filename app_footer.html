@@ -1,4 +1,4 @@
-<!-- P3 APP MODE START (footer): app-only layer for the P3 Store Android app - bottom navigation, reorder list first, quick add with quantity, cart bar. Uses the store's own cart; the website is unchanged. -->
+<!-- P3 APP MODE START (footer): app-only layer for the P3 Store Android app - bottom navigation, "For you" (the customer's reorder list) as the default home view, quick add with quantity, cart bar. Uses the store's own cart; the website is unchanged. -->
 <style>
 html.p3app .p3-nav{position:fixed;left:0;right:0;bottom:0;z-index:2147482000;display:flex;background:#fff;border-top:1px solid #e5e7eb;padding:0 0 env(safe-area-inset-bottom);height:calc(64px + env(safe-area-inset-bottom));font-family:inherit}
 html.p3app .p3-nav a,html.p3app .p3-nav button{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:56px;color:#4b5563;font-size:11.5px;font-weight:600;text-decoration:none;background:none;border:0;padding:6px 0 0;position:relative;font-family:inherit}
@@ -44,60 +44,115 @@ html.p3app .p3-o.out{opacity:.5}
 html.p3app .p3-sf{display:flex;gap:10px;margin-top:8px}
 html.p3app .p3-toast{position:fixed;left:50%;bottom:calc(140px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#111827;color:#fff;padding:10px 16px;border-radius:999px;font-size:14px;z-index:2147483002;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:inherit}
 html.p3app .p3-toast.show{opacity:1}
+html.p3app .p3-tabs{display:flex;gap:6px;margin:10px 12px 0;padding:4px;background:#e5e7eb;border-radius:12px;font-family:inherit}
+html.p3app .p3-tabs button{flex:1 1 0;height:40px;border:0;border-radius:9px;background:transparent;color:#374151;font-size:15px;font-weight:700;font-family:inherit;display:flex;align-items:center;justify-content:center;padding:0}
+html.p3app .p3-tabs button.on{background:#fff;color:#D71920;box-shadow:0 1px 2px rgba(17,24,39,.12)}
+html.p3app.p3-fyv .theme-mobile-content-wrap>.theme-banner,html.p3app.p3-fyv .theme-mobile-content-wrap>.theme-content-area,html.p3app.p3-fyv .theme-mobile-content-wrap>#custom-product-end-sections{display:none!important}
+html.p3app:not(.p3-fyv) .p3-fy{display:none!important}
+html.p3app .p3-fy{padding:0 12px 12px;font-family:inherit}
+html.p3app .p3-fy .p3-head{margin:10px 0}
+html.p3app .p3-row{display:flex;gap:12px;align-items:flex-start;background:#fff;border-radius:14px;padding:12px;margin:0 0 8px;box-shadow:0 1px 2px rgba(17,24,39,.06)}
+html.p3app .p3-row-img{flex:0 0 76px;width:76px;height:76px;display:block}
+html.p3app .p3-row-img img{width:76px;height:76px;object-fit:contain;display:block}
+html.p3app .p3-row-d{flex:1 1 auto;min-width:0}
+html.p3app .p3-row-sku{font-size:12px;line-height:16px;color:#6b7280}
+html.p3app .p3-row-n{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:15px;line-height:20px;font-weight:600;color:#111827;text-decoration:none;margin-top:2px}
+html.p3app .p3-row-p{font-size:17px;line-height:22px;font-weight:700;color:#111827;margin-top:4px}
+html.p3app .p3-row-p small{font-size:12px;font-weight:500;color:#6b7280;margin-left:6px}
+html.p3app .p3-skel{height:100px;border-radius:14px;margin:0 0 8px;background:linear-gradient(90deg,#eceef1 25%,#f6f7f9 50%,#eceef1 75%);background-size:200% 100%;animation:p3sk 1.2s linear infinite}
+@keyframes p3sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+html.p3app .p3-fy .p3-btn2{display:flex;align-items:center;justify-content:center;margin-top:12px;height:46px;border-radius:10px;background:#111827;color:#fff;font-weight:700;font-size:15px;border:0;width:100%;font-family:inherit}
 </style>
 <script>
 (function(){try{
 if(!window.P3APP||window.__p3app)return;window.__p3app=1;
-var D=document,path=location.pathname,isList=/^\/collections\/reorder-/.test(path);
+var D=document,path=location.pathname,isList=/^\/collections\/reorder-/.test(path),isHome=path==="/";
 function el(h){var t=D.createElement("div");t.innerHTML=h;return t.firstElementChild}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function money(v){return "$"+(Math.round(v*100)/100).toFixed(2)}
 function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+/* the store's own request headers (needed for signed-in customers) */
+function hdr(json){var c=(D.cookie.match(/(?:^|; )csrfc=([^;]*)/)||[])[1];var h={"x-zs-cart-cookie-httponly":"true"};if(c)h["X-ZCSRF-TOKEN"]="csrfp="+c;if(json)h["Content-Type"]="application/json;charset=UTF-8";return h}
+function getJSON(u){return fetch(u,{credentials:"same-origin",headers:hdr()}).then(function(r){return r.text()}).then(function(t){return JSON.parse(t)})}
+/* the customer's own list: from a reorder link, or handed over by the app */
+var qs=new URLSearchParams(location.search),ml=qs.get("mylist");
+if(ml&&/^\/collections\/reorder-[0-9]+\/[0-9]+$/.test(ml))store("p3_mylist",ml);
 if(isList)store("p3_mylist",path);
-var my=store("p3_mylist");
-var signed=window.isLoggedInUser===true;
-var I={home:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>',list:'<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/>',search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',cart:'<path d="M3 4h2l2.4 11h11l2-8H6.2"/><circle cx="10" cy="19.5" r="1.5"/><circle cx="17" cy="19.5" r="1.5"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'};
+var my=store("p3_mylist"),myCid=my?my.split("/").pop():"";
+function signedIn(){if(window.__srSignedIn)return window.__srSignedIn();if(window.isLoggedInUser===true)return true;var e=D.querySelector("[data-portal-loggedin]");return !!(e&&getComputedStyle(e).display!=="none")}
+var I={fy:'<path d="M12 21s-7-4.4-9.3-8.6C1.2 9.6 3 6 6.5 6c2 0 3.5 1.1 5.5 3 2-1.9 3.5-3 5.5-3C21 6 22.8 9.6 21.3 12.4 19 16.6 12 21 12 21z"/>',shop:'<path d="M4 7h16l-1.5 12h-13z"/><path d="M9 7a3 3 0 0 1 6 0"/>',search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',cart:'<path d="M3 4h2l2.4 11h11l2-8H6.2"/><circle cx="10" cy="19.5" r="1.5"/><circle cx="17" cy="19.5" r="1.5"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'};
 function ic(n){return '<svg viewBox="0 0 24 24" aria-hidden="true">'+I[n]+'</svg>'}
-var on=function(k){return (k==="home"&&path==="/")||(k==="list"&&isList)||(k==="cart"&&/^\/cart/.test(path))||(k==="account"&&/^\/(account|signin)/.test(path))?" on":""};
 var nav=el('<nav class="p3-nav" aria-label="App">'+
- '<a href="/" class="'+on("home")+'">'+ic("home")+'<span>Home</span></a>'+
- '<a href="'+(my||"/account/orders")+'" class="'+on("list")+'">'+ic("list")+'<span>My list</span></a>'+
- '<button type="button" data-p3="search">'+ic("search")+'<span>Search</span></button>'+
- '<a href="/cart" class="'+on("cart")+'">'+ic("cart")+'<span>Cart</span><b class="p3-badge" style="display:none">0</b></a>'+
- '<a href="'+(signed?"/account/orders":"/signin")+'" class="'+on("account")+'">'+ic("user")+'<span>'+(signed?"Orders":"Sign in")+'</span></a></nav>');
+ '<a href="/" data-k="fy">'+ic("fy")+'<span>For you</span></a>'+
+ '<a href="/#all" data-k="shop">'+ic("shop")+'<span>Shop</span></a>'+
+ '<button type="button" data-k="search">'+ic("search")+'<span>Search</span></button>'+
+ '<a href="/cart" data-k="cart">'+ic("cart")+'<span>Cart</span><b class="p3-badge" style="display:none">0</b></a>'+
+ '<a href="/signin" data-k="acc">'+ic("user")+'<span>Sign in</span></a></nav>');
 D.body.appendChild(nav);
-nav.querySelector('[data-p3="search"]').addEventListener("click",function(){var s=D.querySelector("[data-zs-mobile-header-search]");if(s){s.click();setTimeout(function(){var i=D.querySelector('input[type="search"],input[name="q"],.theme-search-field input');if(i)i.focus()},150)}else{location.href="/search-products"}});
+function navOn(k){var a=nav.querySelectorAll("[data-k]");for(var i=0;i<a.length;i++)a[i].classList.toggle("on",a[i].getAttribute("data-k")===k)}
+navOn(isHome?"fy":(/^\/cart/.test(path)?"cart":(/^\/(account|signin|signup)/.test(path)?"acc":(isList?"fy":"shop"))));
+nav.querySelector('[data-k="search"]').addEventListener("click",function(){var s=D.querySelector("[data-zs-mobile-header-search]");if(s){s.click();setTimeout(function(){var i=D.querySelector('input[type="search"],input[name="q"],.theme-search-field input');if(i)i.focus()},150)}else{location.href="/search-products"}});
 var bar=el('<div class="p3-cartbar" role="status"><span><b class="p3-n">0 items</b> &middot; <span class="p3-t">$0.00</span></span><a href="/cart">View cart</a></div>');
 D.body.appendChild(bar);
 var toast=el('<div class="p3-toast" role="status"></div>');D.body.appendChild(toast);
-var tt;function say(m){toast.textContent=m;toast.classList.add("show");clearTimeout(tt);tt=setTimeout(function(){toast.classList.remove("show")},1800)}
-function cart(){return fetch("/storefront/api/v1/cart",{credentials:"same-origin"}).then(function(r){return r.json()}).then(function(j){var p=(j&&j.payload)||{},li=p.line_items||[],n=0,t=0;for(var i=0;i<li.length;i++){var q=parseFloat(li[i].quantity)||0;n+=q;t+=parseFloat(li[i].total!=null?li[i].total:(li[i].selling_price||0)*q)||0}if(p.sub_total!=null)t=parseFloat(p.sub_total)||t;var b=nav.querySelector(".p3-badge");b.textContent=n>99?"99+":n;b.style.display=n>0?"":"none";var cs=D.querySelectorAll("[data-zs-view-cart-count]");for(var k=0;k<cs.length;k++)cs[k].textContent=n;var showBar=n>0&&!/^\/(cart|checkout)/.test(path);bar.querySelector(".p3-n").textContent=n+(n===1?" item":" items");bar.querySelector(".p3-t").textContent=money(t);bar.classList.toggle("show",showBar);D.documentElement.classList.toggle("p3-hasbar",showBar);return n}).catch(function(){})}
-function add(vid,q,name,btn){if(btn){btn.disabled=true;btn.textContent="Adding…"}
+var tt;function say(m){toast.textContent=m;toast.classList.add("show");clearTimeout(tt);tt=setTimeout(function(){toast.classList.remove("show")},2200)}
+/* sign-in state: the store fills it in after the page loads, so check a few times */
+var wasSigned=null;
+function applySigned(){var s=signedIn();if(s===wasSigned)return s;wasSigned=s;var a=nav.querySelector('[data-k="acc"]');a.href=s?"/account/orders":"/signin";a.querySelector("span").textContent=s?"Account":"Sign in";var b=D.querySelectorAll(".p3-signin");for(var i=0;i<b.length;i++)b[i].style.display=s?"none":"";return s}
+applySigned();[400,1000,2000,3500,6000].forEach(function(ms){setTimeout(applySigned,ms)});
+function cart(){return getJSON("/storefront/api/v1/cart").then(function(j){var p=(j&&j.payload)||{},li=p.line_items||[],n=0,t=0;for(var i=0;i<li.length;i++){var q=parseFloat(li[i].quantity)||0;n+=q;t+=parseFloat(li[i].total!=null?li[i].total:(li[i].selling_price||0)*q)||0}if(p.sub_total!=null)t=parseFloat(p.sub_total)||t;var b=nav.querySelector(".p3-badge");b.textContent=n>99?"99+":n;b.style.display=n>0?"":"none";var cs=D.querySelectorAll("[data-zs-view-cart-count]");for(var k=0;k<cs.length;k++)cs[k].textContent=n;var showBar=n>0&&!/^\/(cart|checkout)/.test(path);bar.querySelector(".p3-n").textContent=n+(n===1?" item":" items");bar.querySelector(".p3-t").textContent=money(t);bar.classList.toggle("show",showBar);D.documentElement.classList.toggle("p3-hasbar",showBar);return n}).catch(function(){})}
+function done(btn,ok){if(!btn)return;if(ok){btn.classList.add("ok");btn.textContent="Added ✓";setTimeout(function(){btn.classList.remove("ok");btn.textContent=btn.getAttribute("data-l")||"Add";btn.disabled=false},1400)}else{btn.textContent=btn.getAttribute("data-l")||"Add";btn.disabled=false}}
+function add(vid,q,name,btn,onOk){if(btn){if(!btn.getAttribute("data-l"))btn.setAttribute("data-l",btn.textContent);btn.disabled=true;btn.textContent="Adding…"}
  var body={product_variant_id:String(vid),quantity:String(q),custom_fields:[]};var pc=store("delivery_postal_code");if(pc){body.postal_code=pc;body.state_code=store("delivery-availabilitty-state-code")||"";body.country_code=store("delivery-availabilitty-country-code")||""}
- return fetch("/storefront/api/v1/cart",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}).then(function(r){return r.json()}).then(function(j){var ok=j&&String(j.status_code)==="0";if(ok){say("Added "+q+" × "+name);if(btn){btn.classList.add("ok");btn.textContent="Added ✓";setTimeout(function(){btn.classList.remove("ok");btn.textContent="Add";btn.disabled=false},1400)}cart()}else{say((j&&(j.status_message||j.message))||"Could not add - try again");if(btn){btn.textContent="Add";btn.disabled=false}}return ok}).catch(function(){say("No connection - try again");if(btn){btn.textContent="Add";btn.disabled=false}})}
+ return fetch("/storefront/api/v1/cart",{method:"POST",credentials:"same-origin",headers:hdr(true),body:JSON.stringify(body)}).then(function(r){return r.text().then(function(t){var j=null;try{j=JSON.parse(t)}catch(e){}return {s:r.status,j:j}})}).then(function(x){var ok=x.j&&String(x.j.status_code)==="0";if(ok){say("Added "+q+" × "+name);done(btn,true);cart();if(onOk)onOk()}else{var m=x.j&&(x.j.status_message&&x.j.status_message!=="failure"?x.j.status_message:(x.j.developer_message||x.j.message));say(m?("Not added: "+m):"Not added - please try again ("+x.s+")");done(btn,false)}return ok}).catch(function(){say("No internet connection - please try again");done(btn,false);return false})}
 function stepper(){var s=el('<div class="p3-step"><button type="button" aria-label="Less">−</button><input type="number" inputmode="numeric" min="1" max="999" value="1" aria-label="Quantity"><button type="button" aria-label="More">+</button></div>');var i=s.querySelector("input"),b=s.querySelectorAll("button");var ch=function(){if(s.onchg)s.onchg(s.val())};b[0].onclick=function(){i.value=Math.max(1,(parseInt(i.value,10)||1)-1);ch()};b[1].onclick=function(){i.value=Math.min(999,(parseInt(i.value,10)||1)+1);ch()};i.addEventListener("input",ch);s.val=function(){return Math.max(1,Math.min(999,parseInt(i.value,10)||1))};return s}
-/* variant chooser (pack / case) as a bottom sheet */
+/* pack / case options */
 function unit(v,q){var u=v.price;(v.br||[]).forEach(function(b){var s=parseInt(b.start_quantity,10)||1,e=parseInt(b.end_quantity,10)||0;if(q>=s&&(e===0||q<=e))u=parseFloat(b.pricebook_rate)});return u}
+function mapV(p){return (p.variants||[]).map(function(v){var o=(v.options||[]).map(function(x){return x.value||x.name}).join(" / ");var t=null;(v.price_brackets||[]).forEach(function(b){var r=parseFloat(b.pricebook_rate),q=parseInt(b.start_quantity,10)||1;if(q>1&&r<v.selling_price&&(!t||r<t.rate))t={from:q,rate:r}});return {id:v.variant_id,name:o||p.name,price:v.selling_price,br:v.price_brackets||[],tier:t,out:v.is_out_of_stock===true,buy:v.hide_add_to_cart!==true}})}
 var cache={};
-function variants(pid){if(cache[pid])return cache[pid];cache[pid]=fetch("/storefront/api/v1/products/"+pid,{credentials:"same-origin"}).then(function(r){return r.json()}).then(function(j){var p=j.payload.product;return (p.variants||[]).map(function(v){var o=(v.options||[]).map(function(x){return x.value||x.name}).join(" / ");var t=null;(v.price_brackets||[]).forEach(function(b){var r=parseFloat(b.pricebook_rate),q=parseInt(b.start_quantity,10)||1;if(q>1&&r<v.selling_price&&(!t||r<t.rate))t={from:q,rate:r}});return {id:v.variant_id,name:o||p.name,price:v.selling_price,br:v.price_brackets||[],tier:t,stock:v.stock_available,out:v.is_out_of_stock===true,buy:v.is_available_for_purchase!==false&&v.hide_add_to_cart!==true}})});return cache[pid]}
-function sheet(pid,name,img,sku){var bg=el('<div class="p3-sheet-bg"></div>'),sh=el('<div class="p3-sheet" role="dialog" aria-label="Choose pack or case"><div class="p3-grip"></div><div class="p3-sh">'+(img?'<img alt="" src="'+img+'">':'')+'<div><b></b><small></small></div></div><div class="p3-os"><div class="p3-o"><span>Loading options…</span></div></div><div class="p3-sf"></div></div>');
+function variants(pid){if(cache[pid])return cache[pid];cache[pid]=getJSON("/storefront/api/v1/products/"+pid).then(function(j){return mapV(j.payload.product)});cache[pid].catch(function(){delete cache[pid]});return cache[pid]}
+function sheet(pid,name,img,sku,onOk){var bg=el('<div class="p3-sheet-bg"></div>'),sh=el('<div class="p3-sheet" role="dialog" aria-label="Choose pack or case"><div class="p3-grip"></div><div class="p3-sh">'+(img?'<img alt="" src="'+esc(img)+'">':'')+'<div><b></b><small></small></div></div><div class="p3-os"><div class="p3-o"><span>Loading options…</span></div></div><div class="p3-sf"></div></div>');
  sh.querySelector(".p3-sh b").textContent=name;sh.querySelector(".p3-sh small").textContent=sku||"";D.body.appendChild(bg);D.body.appendChild(sh);requestAnimationFrame(function(){bg.classList.add("open");sh.classList.add("open")});
  function close(){sh.classList.remove("open");bg.classList.remove("open");setTimeout(function(){bg.remove();sh.remove()},220)}bg.onclick=close;
- var st=stepper(),ab=el('<button type="button" class="p3-add">Add to cart</button>'),sel=null;var lab=function(){if(sel&&sel.price!=null&&!ab.disabled){var q=st.val();ab.textContent="Add \u00b7 "+money(unit(sel,q)*q)}};st.onchg=lab;sh.querySelector(".p3-sf").appendChild(st);sh.querySelector(".p3-sf").appendChild(ab);
- variants(pid).then(function(vs){var os=sh.querySelector(".p3-os");os.innerHTML="";vs.forEach(function(v,ix){var b=el('<button type="button" class="p3-o'+(v.out||!v.buy?" out":"")+'"><span></span><strong></strong></button>');b.querySelector("span").textContent=v.name;if(v.out){b.querySelector("span").insertAdjacentHTML("beforeend","<em>Out of stock</em>")}else if(v.tier){var em=D.createElement("em");em.textContent=money(v.tier.rate)+" each from "+v.tier.from;b.querySelector("span").appendChild(em)}b.querySelector("strong").textContent=v.price!=null?money(v.price):"";b.onclick=function(){if(v.out||!v.buy)return;var a=os.querySelectorAll(".p3-o");for(var k=0;k<a.length;k++)a[k].classList.remove("sel");b.classList.add("sel");sel=v;lab()};os.appendChild(b);if(!sel&&!v.out&&v.buy){sel=v;b.classList.add("sel")}});if(!sel){ab.disabled=true;ab.textContent="Out of stock"}else{lab()}}).catch(function(){sh.querySelector(".p3-os").innerHTML='<div class="p3-o"><span>Could not load options - check your connection</span></div>'});
- ab.onclick=function(){if(!sel)return;add(sel.id,st.val(),name+" ("+sel.name+")",ab).then(function(ok){if(ok)setTimeout(close,600);else lab()})}}
-function enhance(box){if(box.classList.contains("p3-done"))return;var det=box.querySelector(".theme-product-details-area");if(!det)return;var pid=box.getAttribute("data-zs-product-id");var a=box.querySelector(".theme-product-name a");var name=a?a.textContent.trim():"item";var im=box.querySelector(".theme-product-image-area img");var img=im?(im.getAttribute("src")||im.getAttribute("data-src")||""):"";var skuE=box.querySelector(".theme-sku");var sku=skuE?"SKU "+skuE.textContent.trim():"";
- var single=box.querySelector("[data-zs-add-to-cart][data-zs-product-variant-id]"),multi=box.querySelector("[data-zs-variants]")&&box.querySelector("[data-zs-variants]").options.length>1;
+ var st=stepper(),ab=el('<button type="button" class="p3-add">Add to cart</button>'),sel=null;var lab=function(){if(sel&&sel.price!=null&&!ab.disabled){var q=st.val();ab.textContent="Add · "+money(unit(sel,q)*q);ab.setAttribute("data-l",ab.textContent)}};st.onchg=lab;sh.querySelector(".p3-sf").appendChild(st);sh.querySelector(".p3-sf").appendChild(ab);
+ variants(pid).then(function(vs){var os=sh.querySelector(".p3-os");os.innerHTML="";vs.forEach(function(v){var b=el('<button type="button" class="p3-o'+(v.out||!v.buy?" out":"")+'"><span></span><strong></strong></button>');b.querySelector("span").textContent=v.name;if(v.out){b.querySelector("span").insertAdjacentHTML("beforeend","<em>Out of stock</em>")}else if(v.tier){var em=D.createElement("em");em.textContent=money(v.tier.rate)+" each from "+v.tier.from;b.querySelector("span").appendChild(em)}b.querySelector("strong").textContent=v.price!=null?money(v.price):"";b.onclick=function(){if(v.out||!v.buy)return;var a=os.querySelectorAll(".p3-o");for(var k=0;k<a.length;k++)a[k].classList.remove("sel");b.classList.add("sel");sel=v;lab()};os.appendChild(b);if(!sel&&!v.out&&v.buy){sel=v;b.classList.add("sel")}});if(!sel){ab.disabled=true;ab.textContent="Out of stock"}else{lab()}}).catch(function(){sh.querySelector(".p3-os").innerHTML='<div class="p3-o"><span>Could not load the options - check your connection and try again</span></div>'});
+ ab.onclick=function(){if(!sel)return;add(sel.id,st.val(),name+" ("+sel.name+")",ab,onOk).then(function(ok){if(ok)setTimeout(close,600);else lab()})}}
+function quick(container,o){/* o: pid, name, img, sku, single variant id or null, onOk */
  var row=el('<div class="p3q"></div>');
- if(single&&!multi){var st=stepper(),b=el('<button type="button" class="p3-add">Add</button>');row.appendChild(st);row.appendChild(b);b.onclick=function(){add(single.getAttribute("data-zs-product-variant-id"),st.val(),name,b)}}
- else if(pid){var c=el('<button type="button" class="p3-opt-btn">Choose pack / case</button>');row.appendChild(c);c.onclick=function(){sheet(pid,name,img,sku)};c.addEventListener("touchstart",function(){variants(pid)},{passive:true})}
- else return;
- det.appendChild(row);box.classList.add("p3-done")}
+ if(o.vid){var st=stepper(),b=el('<button type="button" class="p3-add">Add</button>');row.appendChild(st);row.appendChild(b);b.onclick=function(){add(o.vid,st.val(),o.name,b,o.onOk)}}
+ else if(o.out){row.appendChild(el('<button type="button" class="p3-opt-btn" disabled>Out of stock</button>'))}
+ else{var c=el('<button type="button" class="p3-opt-btn">Choose pack / case</button>');row.appendChild(c);c.onclick=function(){sheet(o.pid,o.name,o.img,o.sku,o.onOk)};c.addEventListener("touchstart",function(){variants(o.pid)},{passive:true})}
+ container.appendChild(row)}
+/* store product lists (collections, categories, search): quantity + add on each row */
+function enhance(box){if(box.classList.contains("p3-done"))return;var det=box.querySelector(".theme-product-details-area");if(!det)return;var pid=box.getAttribute("data-zs-product-id");var a=box.querySelector(".theme-product-name a");var name=a?a.textContent.trim():"item";var im=box.querySelector(".theme-product-image-area img");var img=im?(im.getAttribute("src")||im.getAttribute("data-src")||""):"";var skuE=box.querySelector(".theme-sku");var sku=skuE?"SKU "+skuE.textContent.trim():"";
+ var single=box.querySelector("[data-zs-add-to-cart][data-zs-product-variant-id]"),sel=box.querySelector("[data-zs-variants]"),multi=sel&&sel.options.length>1;
+ if(!single&&!pid)return;
+ quick(det,{pid:pid,name:name,img:img,sku:sku,vid:(single&&!multi)?single.getAttribute("data-zs-product-variant-id"):null});box.classList.add("p3-done")}
 function run(){var bs=D.querySelectorAll(".theme-product-ratio .theme-prod-box[data-zs-product-id]");for(var i=0;i<bs.length;i++)enhance(bs[i])}
-/* reorder list header; home shows the customer's list first */
-if(isList){var t=D.querySelector("main .theme-section, #main-content, main");var n=D.querySelectorAll(".theme-product-ratio .theme-prod-box[data-zs-product-id]").length;var h=el('<div class="p3-head"><h1>Your reorder list</h1><p>'+n+' items you usually order, plus a few that businesses like yours buy. Set the quantity and tap Add.</p>'+(signed?'':'<a class="p3-signin" href="/signin">Sign in to see your prices</a>')+'</div>');var g=D.querySelector(".theme-produt-category-list-row")||D.querySelector(".zprow.theme-product-ratio");if(g&&g.parentNode){g.parentNode.insertBefore(h,g)}else if(t){t.insertBefore(h,t.firstChild)}}
-if(path==="/"&&my){var ban=D.querySelector(".theme-banner");var mc=ban?ban.parentNode:(D.querySelector("#main-content")||D.querySelector("main"));if(mc){var hh=el('<div class="p3-head"><h1>Welcome back</h1><p>Your reorder list is ready with the items you usually order.</p><a class="p3-go" href="'+my+'"><span>Open my reorder list</span><span>›</span></a></div>');mc.insertBefore(hh,ban||mc.firstChild)}}
+if(isList){var t=D.querySelector("main .theme-section, #main-content, main");var n=D.querySelectorAll(".theme-product-ratio .theme-prod-box[data-zs-product-id]").length;var h=el('<div class="p3-head"><h1>For you</h1><p>'+n+' items you usually order, plus a few that businesses like yours buy. Set the quantity and tap Add.</p><a class="p3-signin" href="/signin">Sign in to see your prices</a></div>');var g=D.querySelector(".theme-produt-category-list-row")||D.querySelector(".zprow.theme-product-ratio");if(g&&g.parentNode){g.parentNode.insertBefore(h,g)}else if(t){t.insertBefore(h,t.firstChild)}applySigned()}
+/* HOME: "For you" (the customer's own reorder list, the default) and "All products" */
+if(isHome){
+ var wrap=D.querySelector(".theme-mobile-content-wrap")||D.querySelector("main")||D.body;
+ var tabs=el('<div class="p3-tabs" role="tablist"><button type="button" role="tab" data-t="fy">For you</button><button type="button" role="tab" data-t="all">All products</button></div>');
+ var fy=el('<div class="p3-fy" role="tabpanel"></div>');
+ wrap.insertBefore(fy,wrap.firstChild);wrap.insertBefore(tabs,fy);
+ function show(t){D.documentElement.classList.toggle("p3-fyv",t==="fy");var b=tabs.querySelectorAll("button");for(var i=0;i<b.length;i++)b[i].classList.toggle("on",b[i].getAttribute("data-t")===t);navOn(t==="fy"?"fy":"shop");if(t==="fy")loadFy()}
+ tabs.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest("button[data-t]");if(!b)return;var t=b.getAttribute("data-t");try{history.replaceState(null,"",t==="all"?"#all":location.pathname+location.search)}catch(x){}show(t);window.scrollTo(0,0)});
+ window.addEventListener("hashchange",function(){show(location.hash==="#all"?"all":"fy")});
+ var fyLoaded=false,events=false;
+ function rows(items){var box=D.createElement("div");items.forEach(function(p){var r=el('<div class="p3-row"><a class="p3-row-img" href="'+esc(p.u)+'">'+(p.i?'<img loading="lazy" alt="" src="'+esc(p.i)+'">':'')+'</a><div class="p3-row-d">'+(p.s?'<div class="p3-row-sku">SKU: '+esc(p.s)+'</div>':'')+'<a class="p3-row-n" href="'+esc(p.u)+'">'+esc(p.n)+'</a><div class="p3-row-p">'+(p.p!=null?(p.m?"From ":"")+money(p.p):"")+(p.t?'<small>'+esc(p.t)+'</small>':'')+'</div></div></div>');if(p.v)cache[p.id]=Promise.resolve(p.v);quick(r.querySelector(".p3-row-d"),{pid:p.id,name:p.n,img:p.i,sku:p.s?"SKU "+p.s:"",vid:p.one,out:p.o,onOk:function(){if(window.__srSend&&myCid)window.__srSend("Add to cart",myCid,"App","/")}});box.appendChild(r)});return box}
+ function slim(prods){return prods.map(function(p){var vs=mapV(p),img=(p.images&&p.images[0]&&p.images[0].url)?("https://cdn1.zohoecommerce.com"+p.images[0].url+"/200x200?storefront_domain="+location.hostname):"";var buy=vs.filter(function(v){return !v.out&&v.buy});var min=null;vs.forEach(function(v){if(v.price!=null&&(min==null||v.price<min))min=v.price});var tier=null;vs.forEach(function(v){if(v.tier&&(!tier||v.tier.rate<tier.rate))tier=v.tier});var sku=(p.variants&&p.variants[0]&&p.variants[0].sku)||"";return {id:p.product_id,n:p.name,u:p.url,i:img,s:sku,p:min,m:vs.length>1,t:tier?(money(tier.rate)+" each from "+tier.from):"",one:(vs.length===1&&buy.length===1)?vs[0].id:null,o:buy.length===0,v:vs}})}
+ function render(items,signed){fy.innerHTML="";var head=el('<div class="p3-head"><h1>For you</h1><p>'+items.length+' items you usually order, plus a few that businesses like yours buy. Set the quantity and tap Add.</p><a class="p3-signin" href="/signin">Sign in to see your prices</a></div>');fy.appendChild(head);fy.appendChild(rows(items));wasSigned=null;applySigned()}
+ function loadFy(){if(fyLoaded)return;fyLoaded=true;
+  if(!my){fy.innerHTML="";var e=el('<div class="p3-head"><h1>For you</h1><p>Your own reorder list - the items you usually order, with your prices - shows here after you open the reorder link P3 sends you on WhatsApp.</p><button type="button" class="p3-btn2">Browse all products</button></div>');e.querySelector("button").onclick=function(){show("all")};fy.appendChild(e);return}
+  var key="p3_fy_"+myCid,c=null;try{c=JSON.parse(store(key)||"null")}catch(x){}
+  if(c&&c.items&&c.items.length){render(c.items)}else{fy.innerHTML='<div class="p3-skel"></div><div class="p3-skel"></div><div class="p3-skel"></div><div class="p3-skel"></div>'}
+  getJSON("/storefront/api/v1/collections/"+myCid).then(function(j){var pl=j&&j.payload||{};var prods=pl.products||(pl.collection&&pl.collection.products)||[];var items=slim(prods);var lite=items.map(function(x){var y={};for(var k in x)if(k!=="v")y[k]=x[k];return y});try{store(key,JSON.stringify({t:Date.now(),items:lite}))}catch(x){}if(!items.length&&!(c&&c.items&&c.items.length)){fy.innerHTML="";var e=el('<div class="p3-head"><h1>For you</h1><p>Your reorder list is being refreshed - please check again in a little while, or browse all products.</p><button type="button" class="p3-btn2">Browse all products</button></div>');e.querySelector("button").onclick=function(){show("all")};fy.appendChild(e);return}render(items)}).catch(function(){if(!(c&&c.items&&c.items.length)){fy.innerHTML="";var e=el('<div class="p3-head"><h1>For you</h1><p>Could not load your list - check your connection.</p><button type="button" class="p3-btn2">Try again</button></div>');e.querySelector("button").onclick=function(){fyLoaded=false;loadFy()};fy.appendChild(e)}});
+  if(!events&&window.__srSend&&myCid){events=true;window.__srSend("Open",myCid,"App","/");var n=0;(function chk(){if(signedIn()){window.__srSend("Signed in",myCid,"App","/")}else if(++n<8){setTimeout(chk,750)}})()}}
+ show(location.hash==="#all"?"all":"fy");
+}
 run();var pend=0;new MutationObserver(function(){if(pend)return;pend=1;requestAnimationFrame(function(){pend=0;run()})}).observe(D.body,{childList:true,subtree:true});
 cart();
-}catch(e){}})();
+}catch(e){if(window.console)console.warn("P3 app layer",e)}})();
 </script>
 <!-- P3 APP MODE END (footer) -->

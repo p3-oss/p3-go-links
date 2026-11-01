@@ -1,0 +1,62 @@
+<!-- SMART REORDER E4 START: logs opens, sign-ins and add-to-cart on private reorder collections (and on the app's "For you" view) into CRM "Reorder Events". Remove this block to switch it off. -->
+<script>
+(function () {
+  try {
+    if (window.__srSend) return;
+    var day = new Date().toISOString().slice(0, 10);
+    var psEv = { "Open": "sr_collection_open", "Signed in": "sr_signed_in", "Add to cart": "sr_add_to_cart" };
+    function once(k) { try { if (sessionStorage.getItem(k)) return false; sessionStorage.setItem(k, "1"); } catch (e) {} return true; }
+    function post(ev, cid, src, page) {
+      try { window.pagesense = window.pagesense || []; window.pagesense.push(["trackEvent", psEv[ev]]); } catch (e) {}
+      try {
+        var f = new URLSearchParams();
+        f.append("xnQsjsdp", "4ee19efb27b569e3fe21ac898a05ff4d2f4b2d8d8fb019bb9f08356c80b1681c");
+        f.append("zc_gad", "");
+        f.append("xmIwtLD", "468c2b5255a4f11d06c95489a98418839c9bd2a61ec2a701ba38482b36c01a864129887621017e109ee783c7bcf6ae86");
+        f.append("actionType", "Q3VzdG9tTW9kdWxlMjA=");
+        f.append("returnURL", "null");
+        f.append("NAME", ev + " " + cid);
+        f.append("COBJ20CF1", ev);
+        f.append("COBJ20CF2", cid);
+        f.append("COBJ20CF3", src);
+        f.append("COBJ20CF4", String(page || location.pathname).slice(0, 250));
+        f.append("aG9uZXlwb3Q", "");
+        fetch("https://crm.zoho.com/crm/WebForm", { method: "POST", mode: "no-cors", body: f, keepalive: true });
+      } catch (e) {}
+    }
+    /* Open and Signed in: once per collection per day per browser tab; Add to cart: every add */
+    window.__srSend = function (ev, cid, src, page) {
+      if (!cid) return;
+      if (ev === "Open" && !once("sr_open_" + cid + "_" + day)) return;
+      if (ev === "Signed in" && !once("sr_in_" + cid + "_" + day)) return;
+      post(ev, cid, src, page);
+    };
+    /* the store marks a signed-in customer after the page loads */
+    window.__srSignedIn = function () {
+      if (window.isLoggedInUser === true) return true;
+      var e = document.querySelector("[data-portal-loggedin]");
+      return !!(e && getComputedStyle(e).display !== "none");
+    };
+    var m = location.pathname.match(/^\/collections\/reorder-[0-9]+\/([0-9]+)/);
+    if (!m || window.__srEv) return;
+    window.__srEv = 1;
+    var cid = m[1];
+    var us = "";
+    try { us = (new URLSearchParams(location.search).get("utm_source") || "").toLowerCase(); } catch (e) {}
+    if (us === "crm") return; /* a rep opening the list from CRM is not a customer visit */
+    var src = us === "whatsapp" ? "WhatsApp" : ((us === "app" || window.P3APP) ? "App" : "Web");
+    function start() {
+      window.__srSend("Open", cid, src);
+      var n = 0;
+      (function chk() { if (window.__srSignedIn()) { window.__srSend("Signed in", cid, src); } else if (++n < 8) { setTimeout(chk, 750); } })();
+      var last = 0;
+      document.addEventListener("click", function (e) {
+        var b = e.target && e.target.closest ? e.target.closest("[data-zs-add-to-cart],.p3-add") : null;
+        if (b && Date.now() - last > 1500) { last = Date.now(); window.__srSend("Add to cart", cid, src); }
+      }, true);
+    }
+    if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", start); } else { start(); }
+  } catch (e) {}
+})();
+</script>
+<!-- SMART REORDER E4 END -->
