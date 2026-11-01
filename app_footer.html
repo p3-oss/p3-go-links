@@ -1,0 +1,99 @@
+<!-- P3 APP MODE START (footer): app-only layer for the P3 Store Android app - bottom navigation, reorder list first, quick add with quantity, cart bar. Uses the store's own cart; the website is unchanged. -->
+<style>
+html.p3app .p3-nav{position:fixed;left:0;right:0;bottom:0;z-index:2147482000;display:flex;background:#fff;border-top:1px solid #e5e7eb;padding:0 0 env(safe-area-inset-bottom);height:calc(64px + env(safe-area-inset-bottom));font-family:inherit}
+html.p3app .p3-nav a,html.p3app .p3-nav button{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:56px;color:#4b5563;font-size:11.5px;font-weight:600;text-decoration:none;background:none;border:0;padding:6px 0 0;position:relative;font-family:inherit}
+html.p3app .p3-nav svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+html.p3app .p3-nav .on{color:#D71920}
+html.p3app .p3-badge{position:absolute;top:4px;left:calc(50% + 6px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#D71920;color:#fff;font-size:11px;line-height:18px;font-weight:700;text-align:center}
+html.p3app .p3-cartbar{position:fixed;left:10px;right:10px;bottom:calc(72px + env(safe-area-inset-bottom));z-index:2147481999;display:none;align-items:center;justify-content:space-between;gap:12px;background:#111827;color:#fff;border-radius:14px;padding:10px 10px 10px 16px;box-shadow:0 6px 20px rgba(0,0,0,.18);font-size:14px;font-family:inherit}
+html.p3app .p3-cartbar.show{display:flex}
+html.p3app .p3-cartbar b{font-size:15px}
+html.p3app .p3-cartbar a{background:#D71920;color:#fff;text-decoration:none;font-weight:700;border-radius:10px;padding:10px 16px;min-height:44px;display:flex;align-items:center}
+html.p3app.p3-hasbar body{padding-bottom:calc(132px + env(safe-area-inset-bottom))!important}
+html.p3app .p3q{display:flex;align-items:center;gap:8px;margin-top:10px}
+html.p3app .p3-step{display:flex;align-items:center;border:1px solid #d1d5db;border-radius:10px;height:44px;overflow:hidden;background:#fff}
+html.p3app .p3-step button{width:40px;height:44px;border:0;background:#fff;font-size:22px;line-height:1;color:#111827;padding:0}
+html.p3app .p3-step input{width:40px;height:44px;border:0;text-align:center;font-size:16px;font-weight:700;color:#111827;padding:0;-moz-appearance:textfield;background:#fff}
+html.p3app .p3-add{flex:1 1 auto;height:44px;border:0;border-radius:10px;background:#D71920;color:#fff;font-size:15px;font-weight:700;padding:0 12px;font-family:inherit;white-space:nowrap}
+html.p3app .p3-add[disabled]{opacity:.6}
+html.p3app .p3-add.ok{background:#15803d}
+html.p3app .p3-opt-btn{flex:1 1 auto;height:44px;border:1.5px solid #D71920;border-radius:10px;background:#fff;color:#D71920;font-size:15px;font-weight:700;font-family:inherit}
+html.p3app .p3-head{margin:12px 12px 10px;background:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 1px 2px rgba(17,24,39,.06);font-family:inherit}
+html.p3app .p3-head h1{font-size:20px;line-height:26px;margin:0 0 4px;color:#111827;font-weight:700}
+html.p3app .p3-head p{font-size:14px;line-height:20px;margin:0;color:#4b5563}
+html.p3app .p3-head .p3-signin{display:flex;align-items:center;justify-content:center;margin-top:12px;height:46px;border-radius:10px;background:#D71920;color:#fff;font-weight:700;text-decoration:none;font-size:15px}
+html.p3app .p3-head .p3-go{display:flex;align-items:center;justify-content:space-between;margin-top:12px;height:46px;border-radius:10px;background:#111827;color:#fff;font-weight:700;text-decoration:none;font-size:15px;padding:0 16px}
+html.p3app .p3-sheet-bg{position:fixed;inset:0;background:rgba(17,24,39,.45);z-index:2147483000;opacity:0;transition:opacity .15s}
+html.p3app .p3-sheet{position:fixed;left:0;right:0;bottom:0;z-index:2147483001;background:#fff;border-radius:18px 18px 0 0;padding:8px 16px calc(16px + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .2s ease-out;font-family:inherit;max-height:85vh;overflow:auto}
+html.p3app .p3-sheet.open{transform:none}
+html.p3app .p3-sheet-bg.open{opacity:1}
+html.p3app .p3-grip{width:40px;height:4px;border-radius:2px;background:#d1d5db;margin:4px auto 12px}
+html.p3app .p3-sh{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+html.p3app .p3-sh img{width:56px;height:56px;object-fit:contain;border-radius:8px;background:#f9fafb}
+html.p3app .p3-sh b{display:block;font-size:16px;line-height:21px;color:#111827}
+html.p3app .p3-sh small{color:#6b7280;font-size:12px}
+html.p3app .p3-o{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:56px;border:1.5px solid #e5e7eb;border-radius:12px;background:#fff;padding:10px 14px;margin:0 0 8px;text-align:left;font-family:inherit}
+html.p3app .p3-o.sel{border-color:#D71920;background:#fef2f2}
+html.p3app .p3-o span{font-size:15px;font-weight:600;color:#111827}
+html.p3app .p3-o em{display:block;font-style:normal;font-size:12px;color:#6b7280;font-weight:500}
+html.p3app .p3-o strong{font-size:16px;color:#111827;white-space:nowrap}
+html.p3app .p3-o.out{opacity:.5}
+html.p3app .p3-sf{display:flex;gap:10px;margin-top:8px}
+html.p3app .p3-toast{position:fixed;left:50%;bottom:calc(140px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#111827;color:#fff;padding:10px 16px;border-radius:999px;font-size:14px;z-index:2147483002;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:inherit}
+html.p3app .p3-toast.show{opacity:1}
+</style>
+<script>
+(function(){try{
+if(!window.P3APP||window.__p3app)return;window.__p3app=1;
+var D=document,path=location.pathname,isList=/^\/collections\/reorder-/.test(path);
+function el(h){var t=D.createElement("div");t.innerHTML=h;return t.firstElementChild}
+function money(v){return "$"+(Math.round(v*100)/100).toFixed(2)}
+function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+if(isList)store("p3_mylist",path);
+var my=store("p3_mylist");
+var signed=window.isLoggedInUser===true;
+var I={home:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>',list:'<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/>',search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',cart:'<path d="M3 4h2l2.4 11h11l2-8H6.2"/><circle cx="10" cy="19.5" r="1.5"/><circle cx="17" cy="19.5" r="1.5"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'};
+function ic(n){return '<svg viewBox="0 0 24 24" aria-hidden="true">'+I[n]+'</svg>'}
+var on=function(k){return (k==="home"&&path==="/")||(k==="list"&&isList)||(k==="cart"&&/^\/cart/.test(path))||(k==="account"&&/^\/(account|signin)/.test(path))?" on":""};
+var nav=el('<nav class="p3-nav" aria-label="App">'+
+ '<a href="/" class="'+on("home")+'">'+ic("home")+'<span>Home</span></a>'+
+ '<a href="'+(my||"/account/orders")+'" class="'+on("list")+'">'+ic("list")+'<span>My list</span></a>'+
+ '<button type="button" data-p3="search">'+ic("search")+'<span>Search</span></button>'+
+ '<a href="/cart" class="'+on("cart")+'">'+ic("cart")+'<span>Cart</span><b class="p3-badge" style="display:none">0</b></a>'+
+ '<a href="'+(signed?"/account/orders":"/signin")+'" class="'+on("account")+'">'+ic("user")+'<span>'+(signed?"Orders":"Sign in")+'</span></a></nav>');
+D.body.appendChild(nav);
+nav.querySelector('[data-p3="search"]').addEventListener("click",function(){var s=D.querySelector("[data-zs-mobile-header-search]");if(s){s.click();setTimeout(function(){var i=D.querySelector('input[type="search"],input[name="q"],.theme-search-field input');if(i)i.focus()},150)}else{location.href="/search-products"}});
+var bar=el('<div class="p3-cartbar" role="status"><span><b class="p3-n">0 items</b> &middot; <span class="p3-t">$0.00</span></span><a href="/cart">View cart</a></div>');
+D.body.appendChild(bar);
+var toast=el('<div class="p3-toast" role="status"></div>');D.body.appendChild(toast);
+var tt;function say(m){toast.textContent=m;toast.classList.add("show");clearTimeout(tt);tt=setTimeout(function(){toast.classList.remove("show")},1800)}
+function cart(){return fetch("/storefront/api/v1/cart",{credentials:"same-origin"}).then(function(r){return r.json()}).then(function(j){var p=(j&&j.payload)||{},li=p.line_items||[],n=0,t=0;for(var i=0;i<li.length;i++){var q=parseFloat(li[i].quantity)||0;n+=q;t+=parseFloat(li[i].total!=null?li[i].total:(li[i].selling_price||0)*q)||0}if(p.sub_total!=null)t=parseFloat(p.sub_total)||t;var b=nav.querySelector(".p3-badge");b.textContent=n>99?"99+":n;b.style.display=n>0?"":"none";var cs=D.querySelectorAll("[data-zs-view-cart-count]");for(var k=0;k<cs.length;k++)cs[k].textContent=n;var showBar=n>0&&!/^\/(cart|checkout)/.test(path);bar.querySelector(".p3-n").textContent=n+(n===1?" item":" items");bar.querySelector(".p3-t").textContent=money(t);bar.classList.toggle("show",showBar);D.documentElement.classList.toggle("p3-hasbar",showBar);return n}).catch(function(){})}
+function add(vid,q,name,btn){if(btn){btn.disabled=true;btn.textContent="Adding…"}
+ var body={product_variant_id:String(vid),quantity:String(q),custom_fields:[]};var pc=store("delivery_postal_code");if(pc){body.postal_code=pc;body.state_code=store("delivery-availabilitty-state-code")||"";body.country_code=store("delivery-availabilitty-country-code")||""}
+ return fetch("/storefront/api/v1/cart",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}).then(function(r){return r.json()}).then(function(j){var ok=j&&String(j.status_code)==="0";if(ok){say("Added "+q+" × "+name);if(btn){btn.classList.add("ok");btn.textContent="Added ✓";setTimeout(function(){btn.classList.remove("ok");btn.textContent="Add";btn.disabled=false},1400)}cart()}else{say((j&&(j.status_message||j.message))||"Could not add - try again");if(btn){btn.textContent="Add";btn.disabled=false}}return ok}).catch(function(){say("No connection - try again");if(btn){btn.textContent="Add";btn.disabled=false}})}
+function stepper(){var s=el('<div class="p3-step"><button type="button" aria-label="Less">−</button><input type="number" inputmode="numeric" min="1" max="999" value="1" aria-label="Quantity"><button type="button" aria-label="More">+</button></div>');var i=s.querySelector("input"),b=s.querySelectorAll("button");b[0].onclick=function(){i.value=Math.max(1,(parseInt(i.value,10)||1)-1)};b[1].onclick=function(){i.value=Math.min(999,(parseInt(i.value,10)||1)+1)};s.val=function(){return Math.max(1,Math.min(999,parseInt(i.value,10)||1))};return s}
+/* variant chooser (pack / case) as a bottom sheet */
+var cache={};
+function variants(pid){if(cache[pid])return cache[pid];cache[pid]=fetch("/storefront/api/v1/products/"+pid,{credentials:"same-origin"}).then(function(r){return r.json()}).then(function(j){var p=j.payload.product;return (p.variants||[]).map(function(v){var o=(v.options||[]).map(function(x){return x.value||x.name}).join(" / ");return {id:v.variant_id,name:o||p.name,price:v.selling_price,stock:v.stock_available,out:v.is_out_of_stock===true,buy:v.is_available_for_purchase!==false&&v.hide_add_to_cart!==true}})});return cache[pid]}
+function sheet(pid,name,img,sku){var bg=el('<div class="p3-sheet-bg"></div>'),sh=el('<div class="p3-sheet" role="dialog" aria-label="Choose pack or case"><div class="p3-grip"></div><div class="p3-sh">'+(img?'<img alt="" src="'+img+'">':'')+'<div><b></b><small></small></div></div><div class="p3-os"><div class="p3-o"><span>Loading options…</span></div></div><div class="p3-sf"></div></div>');
+ sh.querySelector(".p3-sh b").textContent=name;sh.querySelector(".p3-sh small").textContent=sku||"";D.body.appendChild(bg);D.body.appendChild(sh);requestAnimationFrame(function(){bg.classList.add("open");sh.classList.add("open")});
+ function close(){sh.classList.remove("open");bg.classList.remove("open");setTimeout(function(){bg.remove();sh.remove()},220)}bg.onclick=close;
+ var st=stepper(),ab=el('<button type="button" class="p3-add">Add to cart</button>'),sel=null;sh.querySelector(".p3-sf").appendChild(st);sh.querySelector(".p3-sf").appendChild(ab);
+ variants(pid).then(function(vs){var os=sh.querySelector(".p3-os");os.innerHTML="";vs.forEach(function(v,ix){var b=el('<button type="button" class="p3-o'+(v.out||!v.buy?" out":"")+'"><span></span><strong></strong></button>');b.querySelector("span").textContent=v.name;if(v.out)b.querySelector("span").insertAdjacentHTML("beforeend","<em>Out of stock</em>");b.querySelector("strong").textContent=v.price!=null?money(v.price):"";b.onclick=function(){if(v.out||!v.buy)return;var a=os.querySelectorAll(".p3-o");for(var k=0;k<a.length;k++)a[k].classList.remove("sel");b.classList.add("sel");sel=v};os.appendChild(b);if(!sel&&!v.out&&v.buy){sel=v;b.classList.add("sel")}});if(!sel){ab.disabled=true;ab.textContent="Out of stock"}}).catch(function(){sh.querySelector(".p3-os").innerHTML='<div class="p3-o"><span>Could not load options - check your connection</span></div>'});
+ ab.onclick=function(){if(!sel)return;add(sel.id,st.val(),name+" ("+sel.name+")",ab).then(function(ok){if(ok)setTimeout(close,500)})}}
+function enhance(box){if(box.classList.contains("p3-done"))return;var det=box.querySelector(".theme-product-details-area");if(!det)return;var pid=box.getAttribute("data-zs-product-id");var a=box.querySelector(".theme-product-name a");var name=a?a.textContent.trim():"item";var im=box.querySelector(".theme-product-image-area img");var img=im?(im.getAttribute("src")||im.getAttribute("data-src")||""):"";var skuE=box.querySelector(".theme-sku");var sku=skuE?"SKU "+skuE.textContent.trim():"";
+ var single=box.querySelector("[data-zs-add-to-cart][data-zs-product-variant-id]"),multi=box.querySelector("[data-zs-variants]")&&box.querySelector("[data-zs-variants]").options.length>1;
+ var row=el('<div class="p3q"></div>');
+ if(single&&!multi){var st=stepper(),b=el('<button type="button" class="p3-add">Add</button>');row.appendChild(st);row.appendChild(b);b.onclick=function(){add(single.getAttribute("data-zs-product-variant-id"),st.val(),name,b)}}
+ else if(pid){var c=el('<button type="button" class="p3-opt-btn">Choose pack / case</button>');row.appendChild(c);c.onclick=function(){sheet(pid,name,img,sku)};c.addEventListener("touchstart",function(){variants(pid)},{passive:true})}
+ else return;
+ det.appendChild(row);box.classList.add("p3-done")}
+function run(){var bs=D.querySelectorAll(".theme-prod-box[data-zs-product-id]");for(var i=0;i<bs.length;i++)enhance(bs[i])}
+/* reorder list header; home shows the customer's list first */
+if(isList){var t=D.querySelector("main .theme-section, #main-content, main");var n=D.querySelectorAll(".theme-prod-box[data-zs-product-id]").length;var h=el('<div class="p3-head"><h1>Your reorder list</h1><p>'+n+' items you usually order, plus a few that businesses like yours buy. Set the quantity and tap Add.</p>'+(signed?'':'<a class="p3-signin" href="/signin">Sign in to see your prices</a>')+'</div>');var g=D.querySelector(".theme-produt-category-list-row")||D.querySelector(".zprow.theme-product-ratio");if(g&&g.parentNode){g.parentNode.insertBefore(h,g)}else if(t){t.insertBefore(h,t.firstChild)}}
+if(path==="/"&&my){var mc=D.querySelector("#main-content")||D.querySelector("main");if(mc){var hh=el('<div class="p3-head"><h1>Welcome back</h1><p>Your reorder list is ready with the items you usually order.</p><a class="p3-go" href="'+my+'"><span>Open my reorder list</span><span>›</span></a></div>');mc.insertBefore(hh,mc.firstChild)}}
+run();var pend=0;new MutationObserver(function(){if(pend)return;pend=1;requestAnimationFrame(function(){pend=0;run()})}).observe(D.body,{childList:true,subtree:true});
+cart();
+}catch(e){}})();
+</script>
+<!-- P3 APP MODE END (footer) -->

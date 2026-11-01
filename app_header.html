@@ -1,0 +1,39 @@
+<!-- P3 APP MODE START (header): only when the store runs inside the P3 Store Android app (?p3app=1 or the app's android-app referrer); the website itself is unchanged. -->
+<script>
+(function(){try{
+var a=/[?&]p3app=1/.test(location.search)||(document.referrer||"").indexOf("android-app://com.p3vi.store")===0;
+try{if(a){sessionStorage.setItem("p3app","1")}else if(sessionStorage.getItem("p3app")==="1"){a=true}}catch(e){}
+if(!a)return;
+document.documentElement.className+=" p3app";window.P3APP=true;
+/* lighter product thumbnails in lists: 200x200 instead of 600x600 (about 6x smaller) */
+var fix=function(i){var s=i.getAttribute("data-src");if(s&&s.indexOf("/600x600")>0&&i.closest&&i.closest(".theme-product-image-area")){i.setAttribute("data-src",s.replace("/600x600","/200x200"));var c=i.getAttribute("src");if(c&&c.indexOf("/600x600")>0){i.setAttribute("src",c.replace("/600x600","/200x200"))}}};
+new MutationObserver(function(ms){for(var k=0;k<ms.length;k++){var n=ms[k].addedNodes;for(var j=0;j<n.length;j++){var x=n[j];if(x.nodeType!==1)continue;if(x.tagName==="IMG"){fix(x)}else if(x.querySelectorAll){var l=x.querySelectorAll(".theme-product-image-area img");for(var m=0;m<l.length;m++)fix(l[m])}}}}).observe(document.documentElement,{childList:true,subtree:true});
+}catch(e){}})();
+</script>
+<style>
+/* never hide the page in the app (the A/B-test anti-flicker can hide it for up to 10 s) */
+html.p3app,html.p3app body{opacity:1!important;visibility:visible!important}
+html.p3app body{background:#f3f4f6!important;padding-bottom:calc(66px + env(safe-area-inset-bottom))!important;-webkit-tap-highlight-color:transparent}
+/* website-only parts that the app does not need */
+html.p3app .theme-delivery-location-mobile-container,html.p3app .custom-why-section,html.p3app .custom-video-section,html.p3app .theme-footer-area,html.p3app footer,html.p3app #custom-product-end-sections,
+html.p3app .zsiq_theme1,html.p3app .zsiq_floatmain,html.p3app #zsiq_float,html.p3app .zsiq-newtheme,html.p3app #titlediv,
+html.p3app .theme-wishlist-icon,html.p3app .theme-wishlist-ctr,html.p3app .theme-mobile-header-top [data-zs-drawer-open-button="portal"],html.p3app .theme-mobile-header-top [data-zs-view-cart],
+html.p3app .theme-picklist-basket{display:none!important}
+/* compact header */
+html.p3app .theme-mobile-header-top{min-height:56px!important;box-shadow:0 1px 0 rgba(0,0,0,.06)}
+/* product lists: one compact row per product, quantity + add on the row */
+html.p3app .theme-prod-box{margin:0 0 8px!important;padding:0!important;border:0!important;box-shadow:none!important}
+html.p3app .theme-product-box-content{display:flex!important;flex-direction:row!important;align-items:flex-start!important;gap:12px;background:#fff!important;border:0!important;border-radius:14px!important;padding:12px!important;box-shadow:0 1px 2px rgba(17,24,39,.06)!important;height:auto!important}
+html.p3app .theme-product-image-area{flex:0 0 76px!important;width:76px!important;height:76px!important;max-width:76px!important;min-height:0!important;margin:0!important;padding:0!important}
+html.p3app .theme-product-image-area a,html.p3app .theme-product-image-area picture,html.p3app .theme-product-image-area img{width:76px!important;height:76px!important;object-fit:contain!important}
+html.p3app .theme-product-image-loader-dots{width:76px!important;height:76px!important}
+html.p3app .theme-product-details-area{flex:1 1 auto!important;min-width:0!important;width:auto!important;max-width:none!important;padding:0!important;margin:0!important;height:auto!important}
+html.p3app .theme-product-name-rating-price{height:auto!important;min-height:0!important}
+html.p3app .theme-product-sku{font-size:12px!important;line-height:16px!important;color:#6b7280!important;margin:0 0 2px!important}
+html.p3app .theme-product-name,html.p3app .theme-product-name h2,html.p3app .theme-product-name a{font-size:15px!important;line-height:20px!important;font-weight:600!important;color:#111827!important;margin:0!important;display:-webkit-box!important;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden!important;height:auto!important}
+html.p3app .theme-product-price{margin:4px 0 0!important}
+html.p3app .theme-product-price span{font-size:17px!important;line-height:22px!important;font-weight:700!important;color:#111827!important}
+html.p3app .p3-done .theme-cart-and-wishlist{display:none!important}
+html.p3app .zprow.theme-product-ratio{margin:0!important;padding:0 12px!important}
+</style>
+<!-- P3 APP MODE END (header) -->
