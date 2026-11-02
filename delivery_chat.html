@@ -1,0 +1,68 @@
+<!-- P3 DELIVERY & CHAT START: delivery estimate (BVI & USVI; Mon-Fri 9 am-5 pm AST; orders before 3 pm delivered the next business day) on product, cart and "For you" pages, and a small "We're online" chat invite next to the SalesIQ button on phones. Remove this block to switch both off. -->
+<style>
+.p3-eta{display:flex;gap:10px;align-items:flex-start;margin:12px 0;padding:10px 12px;border-radius:10px;background:#f0fdf4;border:1px solid #bbf7d0;color:#14532d;font-size:14px;line-height:19px;font-family:inherit;text-align:left}
+.p3-eta svg{flex:0 0 20px;width:20px;height:20px;stroke:#15803d;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;margin-top:1px}
+.p3-eta b{font-weight:700}
+.p3-eta small{display:block;color:#4b5563;font-size:12px;line-height:16px;margin-top:2px}
+.p3-eta.p3-eta-far{background:#f9fafb;border-color:#e5e7eb;color:#374151}
+.p3-eta.p3-eta-far svg{stroke:#6b7280}
+.p3-head .p3-eta{margin:10px 0 0}
+.p3-online{position:fixed;z-index:2147482999;display:none;align-items:center;gap:7px;height:34px;padding:0 4px 0 12px;border-radius:17px;background:#fff;color:#111827;border:1px solid #e5e7eb;box-shadow:0 4px 14px rgba(17,24,39,.16);font-family:inherit;font-size:13px;font-weight:600;line-height:1;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent}
+.p3-online.show{display:flex}
+.p3-online i{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:#16a34a;box-shadow:0 0 0 3px rgba(22,163,74,.18)}
+.p3-online span{color:#D71920}
+.p3-online button{border:0;background:none;color:#9ca3af;font-size:18px;line-height:1;width:26px;height:26px;padding:0;margin:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
+</style>
+<script>
+(function(){try{
+if(window.__p3dc)return;window.__p3dc=1;
+var D=document;
+function store(k){try{return localStorage.getItem(k)}catch(e){return null}}
+/* ---------- business calendar: BVI & USVI are on AST (UTC-4, no daylight saving) ---------- */
+var HOLIDAYS=["2026-12-25","2026-12-26","2027-01-01"];/* add public holidays here as "YYYY-MM-DD" */
+var DAYS=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],MONS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function ast(){return new Date(Date.now()-4*36e5)}/* read with getUTC* */
+function ymd(d){return d.toISOString().slice(0,10)}
+function biz(d){var w=d.getUTCDay();return w>0&&w<6&&HOLIDAYS.indexOf(ymd(d))<0}
+function nextBiz(d){var x=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()));do{x=new Date(x.getTime()+864e5)}while(!biz(x));return x}
+function label(d,now){var t=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate())+864e5);var s=DAYS[d.getUTCDay()]+" "+d.getUTCDate()+" "+MONS[d.getUTCMonth()];return ymd(d)===ymd(t)?"tomorrow, "+s:s}
+window.__p3eta=function(){var n=ast(),h=n.getUTCHours()+n.getUTCMinutes()/60,cut=biz(n)&&h<15,day=cut?nextBiz(n):nextBiz(nextBiz(n));
+ var left=null;if(cut){var m=Math.max(1,Math.round((15-h)*60));left=m<60?(m+" min"):(Math.floor(m/60)+" h"+(m%60?" "+(m%60)+" min":""))}
+ var by=cut&&(15-h)>3?"Order by <b>3 pm today</b>":("Order within <b>"+left+"</b>");
+ return {cut:cut,day:day,text:cut?(by+" for delivery <b>"+label(day,n)+"</b>"):("Order now for delivery <b>"+label(day,n)+"</b>")}};
+/* delivery location chosen in the store ("Deliver to"): BVI = VG, USVI = VI (or US + VI) */
+function area(){var c=(store("delivery-availabilitty-country-code")||"").toUpperCase(),s=(store("delivery-availabilitty-state-code")||"").toUpperCase();if(!c)return "?";return (c==="VG"||c==="VI"||(c==="US"&&s==="VI"))?"in":"out"}
+var TRUCK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h11v9H3z"/><path d="M14 9h4l3 3v3h-7z"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg>';
+function etaHtml(){var e=window.__p3eta(),a=area();
+ var note=a==="out"?"We deliver in the BVI and USVI only. Mon-Fri 9 am-5 pm AST.":"BVI & USVI. Orders before 3 pm (Mon-Fri) are delivered the next business day.";
+ return {cls:"p3-eta"+(a==="out"?" p3-eta-far":""),html:TRUCK+'<div>'+e.text+'<small>'+note+'</small></div>'}}
+function put(where,after){if(!where||!where.parentNode)return;var x=D.createElement("div");x.setAttribute("data-p3-eta","1");var h=etaHtml();x.className=h.cls;x.innerHTML=h.html;if(after){where.parentNode.insertBefore(x,where.nextSibling)}else{where.parentNode.insertBefore(x,where)}}
+function place(){
+ /* product page: under quantity + Add to cart */
+ var q=D.querySelector(".theme-product-detail-container .theme-product-quantity-cart-area");if(q&&!q.parentNode.querySelector("[data-p3-eta]"))put(q,true);
+ /* cart: above Checkout */
+ var c=D.querySelector(".theme-cart-summary-inner-container .theme-checkout-button-area");if(c&&!c.parentNode.querySelector("[data-p3-eta]"))put(c,false);
+ /* app "For you": under the heading */
+ var hs=D.querySelectorAll(".p3-fy .p3-head,.p3-fyl .p3-head");for(var i=0;i<hs.length;i++){var hd=hs[i];if(!hd.querySelector("[data-p3-eta]")&&hd.querySelector("p")){var x=D.createElement("div");x.setAttribute("data-p3-eta","1");var h=etaHtml();x.className=h.cls;x.innerHTML=h.html;var sb=hd.querySelector(".p3-signin");hd.insertBefore(x,sb||null)}}}
+function refresh(){var l=D.querySelectorAll("[data-p3-eta]");for(var i=0;i<l.length;i++){var h=etaHtml();l[i].className=h.cls;l[i].innerHTML=h.html}}
+var pend=0;new MutationObserver(function(){if(pend)return;pend=1;setTimeout(function(){pend=0;place()},250)}).observe(D.body,{childList:true,subtree:true});
+place();setInterval(refresh,60000);
+/* ---------- "We're online" chat invite (website only, phones: SalesIQ shows its own text on wide screens) ---------- */
+if(window.P3APP)return;
+function open(){var n=ast(),h=n.getUTCHours()+n.getUTCMinutes()/60;return biz(n)&&h>=9&&h<17}
+var pill=D.createElement("div");pill.className="p3-online";pill.setAttribute("role","button");pill.setAttribute("aria-label","We're online - chat with us");pill.innerHTML='<i></i>We’re online · <span>Chat</span><button type="button" aria-label="Hide">×</button>';D.body.appendChild(pill);
+var footerSeen=false,dismissed=false;try{dismissed=sessionStorage.getItem("p3_chat_pill")==="x"}catch(e){}
+function chat(){try{$zoho.salesiq.floatwindow.visible("show")}catch(e){var f=D.getElementById("zsiq_float");if(f)f.click()}}
+pill.addEventListener("click",function(e){if(e.target.closest&&e.target.closest("button")){dismissed=true;try{sessionStorage.setItem("p3_chat_pill","x")}catch(x){}upd();return}chat();dismissed=true;upd()});
+function upd(){var f=D.getElementById("zsiq_float"),ok=false;
+ if(f&&!dismissed&&!footerSeen&&open()){var r=f.getBoundingClientRect(),txt=f.innerText||"",own=[].some.call(f.querySelectorAll(".zsiq-elips"),function(e){return e.offsetWidth>0});
+  var online=/online/i.test(txt)&&!/offline/i.test(txt),win=D.getElementById("zsiq_chat_wrap"),winOpen=win&&win.offsetWidth>40&&win.offsetHeight>40;
+  if(r.width>0&&online&&!own&&!winOpen){ok=true;pill.style.right=Math.max(8,Math.round(innerWidth-r.left+8))+"px";pill.style.bottom=Math.max(8,Math.round(innerHeight-r.top-r.height/2-17))+"px"}}
+ pill.classList.toggle("show",ok)}
+var ft=D.querySelector(".theme-footer-area")||D.querySelector("footer");
+if(ft&&window.IntersectionObserver){new IntersectionObserver(function(es){footerSeen=es[0].isIntersecting;upd()}).observe(ft)}
+D.addEventListener("click",function(e){if(e.target.closest&&e.target.closest("#zsiq_float")){dismissed=true;upd()}},true);
+window.addEventListener("resize",upd);setTimeout(upd,2500);setInterval(upd,4000);
+}catch(e){if(window.console)console.warn("P3 delivery/chat",e)}})();
+</script>
+<!-- P3 DELIVERY & CHAT END -->
