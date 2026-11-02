@@ -145,6 +145,7 @@ function enhance(box){if(box.classList.contains("p3-done"))return;var det=box.qu
 function run(){var bs=D.querySelectorAll(".theme-product-ratio .theme-prod-box[data-zs-product-id]");for(var i=0;i<bs.length;i++)enhance(bs[i])}
 /* "For you": the customer's reorder list - in stock only, grouped by product family, in the engine's order (P3's own brands first) */
 var OTHER="More for you";
+/* the list comes in the engine order (sort_by=featured; the store default is "Most Popular") */
 /* product family = the product's main category in the store (e.g. "Drink Cup (Cold)", "Bags"); the store's category list is cached on the phone for a week */
 var CATS=null;
 function cats(){if(CATS)return Promise.resolve(CATS);var c=null;try{c=JSON.parse(store("p3_cats")||"null")}catch(x){}if(c&&c.m&&Date.now()-c.t<6048e5){CATS=c.m;return Promise.resolve(CATS)}
@@ -164,7 +165,7 @@ function fyRender(box,items,o){box.innerHTML="";
  var lone=order.length===1&&order[0]===OTHER;
  order.forEach(function(k,ix){var s=el('<section class="p3-fam" data-fam="'+ix+'">'+(lone?'':'<div class="p3-fam-h"><h2></h2><span></span></div>')+'</section>');if(lone){s.appendChild(rows(by[k],o.onOk));box.appendChild(s);return}s.querySelector("h2").textContent=k;s.querySelector(".p3-fam-h span").textContent=by[k].length+(by[k].length===1?" item":" items");s.appendChild(rows(by[k],o.onOk));box.appendChild(s)});
  wasSigned=null;applySigned()}
-function coll(cid,n){return fetch("/storefront/api/v1/collections/"+cid,{credentials:"same-origin",headers:hdr()}).then(function(r){return r.text().then(function(t){if(r.status!==200||!t)throw new Error("s"+r.status);return JSON.parse(t)})}).catch(function(e){if((n||0)<3)return new Promise(function(ok){setTimeout(ok,1200)}).then(function(){return coll(cid,(n||0)+1)});throw e})}
+function coll(cid,n){return fetch("/storefront/api/v1/collections/"+cid+"?sort_by=featured",{credentials:"same-origin",headers:hdr()}).then(function(r){return r.text().then(function(t){if(r.status!==200||!t)throw new Error("s"+r.status);return JSON.parse(t)})}).catch(function(e){if((n||0)<3)return new Promise(function(ok){setTimeout(ok,1200)}).then(function(){return coll(cid,(n||0)+1)});throw e})}
 function fyLoad(box,cid,o){var key="p3_fy2_"+cid,c=null;try{c=JSON.parse(store(key)||"null")}catch(x){}var had=!!(c&&c.items&&c.items.length);
  if(had){fyRender(box,c.items,o)}else{box.innerHTML='<div class="p3-skel"></div><div class="p3-skel"></div><div class="p3-skel"></div><div class="p3-skel"></div>'}
  return Promise.all([coll(cid),cats()]).then(function(r){var j=r[0],pl=j&&j.payload||{};var prods=pl.products||(pl.collection&&pl.collection.products)||[];var items=slim(prods,r[1]);var lite=items.map(function(x){var y={};for(var k in x)if(k!=="v")y[k]=x[k];return y});try{store(key,JSON.stringify({t:Date.now(),items:lite}))}catch(x){}
