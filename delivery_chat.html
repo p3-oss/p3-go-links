@@ -56,7 +56,7 @@ function chat(){try{$zoho.salesiq.floatwindow.visible("show")}catch(e){var f=D.g
 pill.addEventListener("click",function(e){if(e.target.closest&&e.target.closest("button")){dismissed=true;try{sessionStorage.setItem("p3_chat_pill","x")}catch(x){}upd();return}chat();dismissed=true;upd()});
 function upd(){var f=D.getElementById("zsiq_float"),ok=false;
  if(f&&!dismissed&&!footerSeen&&open()){var r=f.getBoundingClientRect(),txt=f.innerText||"",tip=f.querySelector(".zsiq-float-tooltip"),own=!!(tip&&tip.offsetWidth>0&&parseFloat(getComputedStyle(tip).opacity)>0.5);
-  var online=/online/i.test(txt)&&!/offline/i.test(txt),win=D.getElementById("zsiq_chat_wrap"),winOpen=win&&win.offsetWidth>40&&win.offsetHeight>40;
+  var online=/online/i.test(txt)&&!/offline/i.test(txt),win=D.getElementById("zsiq_chat_wrap"),wr=win&&win.getBoundingClientRect(),winOpen=!!(wr&&wr.width>40&&wr.height>40&&getComputedStyle(win).visibility!=="hidden");
   if(r.width>0&&online&&!own&&!winOpen){ok=true;pill.style.right=Math.max(8,Math.round(innerWidth-r.left+8))+"px";pill.style.bottom=Math.max(8,Math.round(innerHeight-r.top-r.height/2-17))+"px"}}
  pill.classList.toggle("show",ok)}
 var ft=D.querySelector(".theme-footer-area")||D.querySelector("footer");
